@@ -13,14 +13,19 @@ def wiki_posting_page(page_obj, text_new, summary):
 if __name__ == '__main__':
     site = pywikibot.Site('ru', 'wikisource', user='TextworkerBot')
     news = pywikibot.Page(site, 'Викитека:Новости сайта')
-    archpage4 = pywikibot.Page(site, 'Викитека:Форум/Новости/Архив-4')
 
     section = re.search('<section begin="news"[/ ]+>(.+?)\n?<section end="news"', news.text, flags=re.S).group(1)
     items = [f'\n* {i.strip()}' for i in section.split('\n*') if i.strip() != '']
     n = 10  # limit for number of rows
+    if len(items) > n:
+        news_new = news.text.replace(section, ''.join(items[:n]))
+        excess = ''.join(items[n:])
 
-    news_new = news.text.replace(section, ''.join(items[:n]))
-    archive_new = re.sub('({{[Зз]акрыто.*?}})\n*', r'\1%s\n' % ''.join(items[n:]), archpage4.text, flags=re.S)
+        archname = re.search('<!--.*?бота-архиватора[:\s]*\[\[(.*?)\]\]\s*-->', news.text, flags=re.S).group(1)
+        archpage = pywikibot.Page(site, archname)
+        pretext = re.search('^(.*?)\n\*', archpage.text, flags=re.S)
+        if pretext.group(1):
+            archive_new = archpage.text.replace(pretext.group(1), f"{pretext}{excess}")
 
-    wiki_posting_page(news, news_new, 'архивация')
-    wiki_posting_page(archpage4, archive_new, 'архивация')
+            wiki_posting_page(news, news_new, 'архивация')
+            wiki_posting_page(archpage, archive_new, 'архивация')
