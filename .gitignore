@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+.idea/
+venv
+*~
+*.sqlite*
+*.log
+*.csv
+*.json
+*.png
+*.xlsx
+*.zip
