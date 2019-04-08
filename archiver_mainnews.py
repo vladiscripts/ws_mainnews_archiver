@@ -24,8 +24,9 @@ if __name__ == '__main__':
         archname = re.search('<!--.*?бота-архиватора[:\s]*\[\[(.*?)\]\]\s*-->', news.text, flags=re.S).group(1)
         archpage = pywikibot.Page(site, archname)
         pretext = re.search('^(.*?)\n\*', archpage.text, flags=re.S)
-        if pretext.group(1):
-            archive_new = archpage.text.replace(pretext.group(1), f"{pretext}{excess}")
+        if pretext:
+            pretext = pretext.group(1)
+            archive_new = archpage.text.replace(pretext, f"{pretext}{excess}")
 
             wiki_posting_page(news, news_new, 'архивация')
             wiki_posting_page(archpage, archive_new, 'архивация')
