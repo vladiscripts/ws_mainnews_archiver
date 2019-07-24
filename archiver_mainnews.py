@@ -4,7 +4,7 @@ import re
 import pywikibot
 
 
-def wiki_posting_page(page_obj, text_new, summary):
+def posting(page_obj, text_new, summary):
     if page_obj.text != text_new:
         page_obj.text = text_new
         page_obj.save(summary=summary)
@@ -12,21 +12,24 @@ def wiki_posting_page(page_obj, text_new, summary):
 
 if __name__ == '__main__':
     site = pywikibot.Site('ru', 'wikisource', user='TextworkerBot')
-    news = pywikibot.Page(site, 'Викитека:Новости сайта')
+    news_page = pywikibot.Page(site, 'Викитека:Новости сайта')
 
-    section = re.search('<section begin="news"[/ ]+>(.+?)\n?<section end="news"', news.text, flags=re.S).group(1)
-    items = [f'\n* {i.strip()}' for i in section.split('\n*') if i.strip() != '']
-    n = 10  # limit for number of rows
+    # Тег <section> плохо работает с ПИ Викитека, см. [[ВТ:ЗКА#Защита форумов до автоподтверждённых]],
+    # также проблемы с <includeonly>. Поэтому — <noinclude>:
+    # news_section = re.search('<section begin="news"[/ ]+>(.+?)\n?<section end="news"', news.text, flags=re.S).group(1)
+    news_section = re.search(r'</noinclude>\s*(\*.+?)\s*<noinclude>', news_page.text, flags=re.S).group(1)
+    items = re.findall(r'^(\*.+)$', news_section, flags=re.MULTILINE)
+    n = 10  # limit for number of rows on the News page
     if len(items) > n:
-        news_new = news.text.replace(section, ''.join(items[:n]))
-        excess = ''.join(items[n:])
+        news_new = news_page.text.replace(news_section, '\n'.join(items[:n]))
+        surplus = '\n'.join(items[n:])
 
-        archname = re.search('<!--.*?бота-архиватора[:\s]*\[\[(.*?)\]\]\s*-->', news.text, flags=re.S).group(1)
-        archpage = pywikibot.Page(site, archname)
-        pretext = re.search('^(.*?)\n\*', archpage.text, flags=re.S)
+        arch_name = re.search(r'<!--.*?бота-архиватора[:\s]*\[\[(.*?)\]\]\s*-->', news_page.text, flags=re.S).group(1)
+        arch_page = pywikibot.Page(site, arch_name)
+        pretext = re.search(r'^(.*?)(?:\n\*)', arch_page.text, flags=re.S)
         if pretext:
             pretext = pretext.group(1)
-            archive_new = archpage.text.replace(pretext, f"{pretext}{excess}")
+            archive_new = arch_page.text.replace(pretext, f"{pretext}\n{surplus}")
 
-            wiki_posting_page(news, news_new, 'архивация')
-            wiki_posting_page(archpage, archive_new, 'архивация')
+            posting(news_page, news_new, 'архивация')
+            posting(arch_page, archive_new, 'архивация')
