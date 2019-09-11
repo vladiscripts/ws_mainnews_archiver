@@ -12,7 +12,9 @@ def posting(page_obj, text_new, summary):
 
 if __name__ == '__main__':
     site = pywikibot.Site('ru', 'wikisource', user='TextworkerBot')
-    news_page = pywikibot.Page(site, 'Викитека:Новости сайта')
+    news_page = pywikibot.Page(site, 'Заглавная страница/Новости сайта')
+    while news_page.isRedirectPage():
+        news_page = news_page.getRedirectTarget()
 
     # Тег <section> плохо работает с ПИ Викитека, см. [[ВТ:ЗКА#Защита форумов до автоподтверждённых]],
     # также проблемы с <includeonly>. Поэтому — <noinclude>:
