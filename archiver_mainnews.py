@@ -10,11 +10,16 @@ def posting(page_obj, text_new, summary):
         page_obj.save(summary=summary)
 
 
+def get_wikipage(site, name):
+    page = pywikibot.Page(site, name)
+    while page.isRedirectPage():
+        page = page.getRedirectTarget()
+    return page
+
+
 if __name__ == '__main__':
     site = pywikibot.Site('ru', 'wikisource', user='TextworkerBot')
-    news_page = pywikibot.Page(site, 'Заглавная страница/Новости сайта')
-    while news_page.isRedirectPage():
-        news_page = news_page.getRedirectTarget()
+    news_page = get_wikipage(site, 'Заглавная страница/Новости сайта')
 
     # Тег <section> плохо работает с ПИ Викитека, см. [[ВТ:ЗКА#Защита форумов до автоподтверждённых]],
     # также проблемы с <includeonly>. Поэтому — <noinclude>:
@@ -27,7 +32,7 @@ if __name__ == '__main__':
         surplus = '\n'.join(items[n:])
 
         arch_name = re.search(r'archive_page\s*=\s*\[\[(.*?)\]\]', news_page.text, flags=re.S).group(1)
-        arch_page = pywikibot.Page(site, arch_name)
+        arch_page = get_wikipage(site, arch_name)
         pretext = re.search(r'^(.*?)(?:\n\*)', arch_page.text, flags=re.S)
         if pretext:
             pretext = pretext.group(1)
