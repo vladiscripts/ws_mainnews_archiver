@@ -26,7 +26,7 @@ if __name__ == '__main__':
         news_new = news_page.text.replace(news_section, '\n'.join(items[:n]))
         surplus = '\n'.join(items[n:])
 
-        arch_name = re.search(r'<!--.*?бота-архиватора[:\s]*\[\[(.*?)\]\]\s*-->', news_page.text, flags=re.S).group(1)
+        arch_name = re.search(r'archive_page\s*=\s*\[\[(.*?)\]\]', news_page.text, flags=re.S).group(1)
         arch_page = pywikibot.Page(site, arch_name)
         pretext = re.search(r'^(.*?)(?:\n\*)', arch_page.text, flags=re.S)
         if pretext:
